@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import toast, { Toaster } from "react-hot-toast"; 
 import { toPng } from "html-to-image"; 
 import { formatDistanceToNow } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS, ja, zhCN } from 'date-fns/locale';
 
 // --- [Supabase 설정] ---
 const supabase = createClient(
@@ -13,7 +13,76 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// --- [데이터 상수] ---
+// --- [다국어 딕셔너리] ---
+const TRANSLATIONS: any = {
+  en: {
+    home: "Home", community: "Community", picks: "Picks", search: "Search...",
+    all: "All", spicy: "Spicy", crispy: "Crispy", sweet: "Sweet", cheese: "Cheese", garlic: "Garlic", boneless: "Boneless",
+    rating: "Rating", name: "Name", brand: "Brand",
+    reviews: "Reviews", leaveReview: "Leave a Review", submit: "Submit Review",
+    order: "Order Card", fullScreen: "Full Screen", save: "Save Image", close: "Close", findStore: "Find Store",
+    desc: "Description", allergy: "Allergy Info",
+    msg_giveme: "Please give me this menu.",
+    placeholder_nick: "Nickname", placeholder_pw: "Password", placeholder_title: "Title", placeholder_content: "Content",
+    poll: "Create Poll", vote: "Vote", helpful: "Helpful", report: "Report",
+    part_whole: "Whole", part_boneless: "Boneless", part_legs: "Legs", part_wings: "Wings", part_combo: "Combo",
+    reset: "Reset Filters", no_result: "No chicken found."
+  },
+  ko: {
+    home: "홈", community: "커뮤니티", picks: "찜", search: "검색...",
+    all: "전체", spicy: "매움", crispy: "바삭", sweet: "달콤", cheese: "치즈", garlic: "마늘", boneless: "순살",
+    rating: "별점순", name: "이름순", brand: "브랜드순",
+    reviews: "리뷰", leaveReview: "리뷰 작성", submit: "등록하기",
+    order: "주문 카드", fullScreen: "크게 보기", save: "이미지 저장", close: "닫기", findStore: "매장 찾기",
+    desc: "설명", allergy: "알레르기 정보",
+    msg_giveme: "이 메뉴로 주세요.",
+    placeholder_nick: "닉네임", placeholder_pw: "비밀번호", placeholder_title: "제목", placeholder_content: "내용을 입력하세요",
+    poll: "투표 만들기", vote: "투표", helpful: "도움됨", report: "신고",
+    part_whole: "한마리", part_boneless: "순살", part_legs: "다리", part_wings: "날개", part_combo: "콤보",
+    reset: "필터 초기화", no_result: "조건에 맞는 치킨이 없어요."
+  },
+  jp: {
+    home: "ホーム", community: "コミュニティ", picks: "お気に入り", search: "検索...",
+    all: "すべて", spicy: "辛い", crispy: "サクサク", sweet: "甘い", cheese: "チーズ", garlic: "ニンニク", boneless: "骨なし",
+    rating: "評価順", name: "名前順", brand: "ブランド順",
+    reviews: "レビュー", leaveReview: "レビューを書く", submit: "送信",
+    order: "注文カード", fullScreen: "全画面表示", save: "画像保存", close: "閉じる", findStore: "店舗を探す",
+    desc: "説明", allergy: "アレルギー情報",
+    msg_giveme: "このメニューをください。",
+    placeholder_nick: "ニックネーム", placeholder_pw: "パスワード", placeholder_title: "タイトル", placeholder_content: "内容を入力",
+    poll: "投票作成", vote: "投票", helpful: "役に立った", report: "通報",
+    part_whole: "一羽", part_boneless: "骨なし", part_legs: "もも肉", part_wings: "手羽先", part_combo: "コンボ",
+    reset: "リセット", no_result: "結果が見つかりません。"
+  },
+  cn: { // 간체
+    home: "首页", community: "社区", picks: "收藏", search: "搜索...",
+    all: "全部", spicy: "辣味", crispy: "脆皮", sweet: "甜味", cheese: "芝士", garlic: "蒜味", boneless: "无骨",
+    rating: "评分", name: "名称", brand: "品牌",
+    reviews: "评论", leaveReview: "写评论", submit: "提交",
+    order: "点单卡", fullScreen: "全屏", save: "保存图片", close: "关闭", findStore: "查找店铺",
+    desc: "描述", allergy: "过敏信息",
+    msg_giveme: "请给我这个菜单。",
+    placeholder_nick: "昵称", placeholder_pw: "密码", placeholder_title: "标题", placeholder_content: "输入内容",
+    poll: "创建投票", vote: "投票", helpful: "有帮助", report: "举报",
+    part_whole: "整鸡", part_boneless: "无骨", part_legs: "鸡腿", part_wings: "鸡翅", part_combo: "组合",
+    reset: "重置筛选", no_result: "未找到相关菜单。"
+  },
+  tw: { // 번체
+    home: "首頁", community: "社群", picks: "精選", search: "搜尋...",
+    all: "全部", spicy: "辣味", crispy: "脆皮", sweet: "甜味", cheese: "起司", garlic: "蒜味", boneless: "無骨",
+    rating: "評分", name: "名稱", brand: "品牌",
+    reviews: "評論", leaveReview: "寫評論", submit: "提交",
+    order: "點餐卡", fullScreen: "全螢幕", save: "保存圖片", close: "關閉", findStore: "搜尋店家",
+    desc: "描述", allergy: "過敏資訊",
+    msg_giveme: "請給我這個菜單。",
+    placeholder_nick: "暱稱", placeholder_pw: "密碼", placeholder_title: "標題", placeholder_content: "輸入內容",
+    poll: "建立投票", vote: "投票", helpful: "有幫助", report: "檢舉",
+    part_whole: "整隻", part_boneless: "無骨", part_legs: "雞腿", part_wings: "雞翅", part_combo: "組合",
+    reset: "重置篩選", no_result: "未找到相關菜單。"
+  }
+};
+
+// --- [브랜드 데이터] ---
 const BRANDS: any = {
   all: { name: "All", koreanName: "전체", color: "#111827" }, 
   bbq: { name: "BBQ", koreanName: "비비큐", color: "#A50034" },
@@ -97,6 +166,16 @@ function getPartEmoji(partName: string) {
 function getKoreanPartName(partName: string) {
     const cleanName = partName.trim();
     return PART_TO_KR[cleanName] || PART_TO_KR[Object.keys(PART_TO_KR).find(k => cleanName.includes(k)) || ""] || cleanName;
+}
+
+function getLocalizedPartName(partName: string, lang: string) {
+    const lower = partName.toLowerCase();
+    const t = TRANSLATIONS[lang] || TRANSLATIONS['en']; 
+    if (lower.includes("boneless") || lower.includes("순살")) return t.part_boneless;
+    if (lower.includes("drumstick") || lower.includes("leg") || lower.includes("다리")) return t.part_legs;
+    if (lower.includes("wing") || lower.includes("윙")) return t.part_wings;
+    if (lower.includes("combo") || lower.includes("콤보")) return t.part_combo;
+    return t.part_whole;
 }
 
 // --- [Physics Scroll Component] ---
@@ -304,7 +383,7 @@ const StarIcon = ({ fill }: { fill: number }) => (
 );
 
 const ChickenCardSkeleton = () => (
-  <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex gap-4 animate-pulse">
+  <div className="bg-white rounded-[24px] p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex gap-4 animate-pulse">
     <div className="w-24 h-24 rounded-2xl bg-gray-200 flex-shrink-0"></div>
     <div className="flex-1 flex flex-col justify-center gap-3">
       <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -337,14 +416,15 @@ const BrandIcon = ({ brandKey, isActive }: { brandKey: string, isActive: boolean
 
     if (!imgSrc) {
         return (
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xs text-white shadow-md transition-transform relative border border-gray-100 ${isActive ? 'scale-110 ring-2 ring-orange-500 shadow-lg shadow-orange-200 z-10' : ''}`} style={{ backgroundColor: brand.color }}>
+            // [Design] 브랜드 아이콘 그림자 강화 (Colored Shadow)
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xs text-white transition-all relative border border-gray-100 ${isActive ? 'scale-110 ring-2 ring-orange-500 shadow-[0_8px_20px_-6px_rgba(249,115,22,0.5)] z-10' : 'shadow-sm hover:scale-105'}`} style={{ backgroundColor: brand.color }}>
                 {brandKey === "all" ? "ALL" : brand.name.substring(0, 2).toUpperCase()}
             </div>
         );
     }
 
     return (
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-white shadow-sm transition-transform relative border border-gray-100 ${isActive ? 'scale-110 ring-2 ring-orange-500 shadow-lg shadow-orange-200 z-10' : ''}`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-white transition-all relative border border-gray-100 ${isActive ? 'scale-110 ring-2 ring-orange-500 shadow-[0_8px_20px_-6px_rgba(249,115,22,0.4)] z-10' : 'shadow-sm hover:scale-105'}`}>
             <div className="w-full h-full rounded-2xl overflow-hidden flex items-center justify-center">
                 <img src={imgSrc} alt={brand.name} className="w-10 h-10 object-contain" onError={handleError} />
             </div>
@@ -352,11 +432,12 @@ const BrandIcon = ({ brandKey, isActive }: { brandKey: string, isActive: boolean
     );
 };
 
-const ChickenCard = ({ group, toggleFavorite, favorites, openModal }: any) => {
+const ChickenCard = ({ group, toggleFavorite, favorites, openModal, lang }: any) => {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const baseItem = group.variants[selectedVariantIndex];
   const parts = baseItem.tags && baseItem.tags.length > 0 ? baseItem.tags : ["Single Menu"];
-  
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+
   const ratingNum = typeof baseItem.avg_rating === "number" ? baseItem.avg_rating : parseFloat(String(baseItem.avg_rating ?? "0"));
   const displayRating = Number.isFinite(ratingNum) ? Number(ratingNum.toFixed(1)) : 0.0;
   const displayCount = Number(baseItem.review_count ?? 0) || 0;
@@ -382,9 +463,22 @@ const ChickenCard = ({ group, toggleFavorite, favorites, openModal }: any) => {
     }
   };
 
+  const displayName = lang === 'ko' ? baseItem.name_kr : (
+    lang === 'jp' ? (baseItem.name_ja || baseItem.name_en) : 
+    (lang === 'cn' ? (baseItem.name_zh || baseItem.name_en) : 
+    (lang === 'tw' ? (baseItem.name_zhHant || baseItem.name_en) : baseItem.name_en))
+  );
+
+  const displayDesc = lang === 'ko' ? baseItem.name_en : (
+    lang === 'jp' ? (baseItem.name_en) : 
+    (lang === 'cn' ? (baseItem.name_en) : 
+    (lang === 'tw' ? (baseItem.name_en) : baseItem.name_kr))
+  );
+
   return (
-    <div className="group bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col gap-4 relative transition-all duration-200 hover:shadow-xl hover:shadow-orange-500/5 active:scale-[0.98] cursor-pointer" onMouseDown={() => { isDragging.current = false; }} onMouseMove={() => { isDragging.current = true; }} onClick={() => { if(!isDragging.current) openModal(baseItem); }}>
-      <button onClick={(e) => { e.stopPropagation(); toggleFavorite(baseItem.id); }} className="absolute top-4 right-4 z-10 p-2.5 rounded-full bg-white/90 hover:bg-gray-50 transition-colors shadow-sm text-lg active:scale-90 border border-gray-100">{favorites.includes(baseItem.id) ? "❤️" : "🤍"}</button>
+    // [Design] 카드 그림자 개선 (부드러운 확산형 그림자 + 호버 시 살짝 떠오름)
+    <div className="group bg-white rounded-[24px] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col gap-4 relative transition-all duration-300 hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.08)] hover:-translate-y-1 active:scale-[0.99] cursor-pointer" onMouseDown={() => { isDragging.current = false; }} onMouseMove={() => { isDragging.current = true; }} onClick={() => { if(!isDragging.current) openModal(baseItem); }}>
+      <button onClick={(e) => { e.stopPropagation(); toggleFavorite(baseItem.id); }} className="absolute top-4 right-4 z-10 text-xl transition-transform active:scale-90 hover:scale-110 drop-shadow-md">{favorites.includes(baseItem.id) ? "❤️" : "🤍"}</button>
       <div className="flex gap-5">
         <div className="w-28 h-28 rounded-2xl flex-shrink-0 overflow-hidden relative shadow-inner bg-gray-50">
           {imgSrc ? (<img src={imgSrc} alt={baseItem.name_en} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={handleImgError} />) : null}
@@ -393,8 +487,8 @@ const ChickenCard = ({ group, toggleFavorite, favorites, openModal }: any) => {
         <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
           <div>
             <div className="flex items-center gap-1 mb-1.5"><span className="text-[10px] font-black text-white px-2 py-0.5 rounded-[6px] uppercase tracking-wider shadow-sm" style={{ backgroundColor: BRANDS[baseItem.brand]?.color || "#333" }}>{BRANDS[baseItem.brand]?.name || baseItem.brand}</span></div>
-            <h3 className="font-bold text-gray-900 text-[17px] leading-snug line-clamp-1 group-hover:text-orange-600 transition-colors">{baseItem.name_en}</h3>
-            <p className="text-xs text-gray-500 font-medium mt-0.5 line-clamp-1">{baseItem.name_kr}</p>
+            <h3 className="font-bold text-gray-900 text-[17px] leading-snug line-clamp-1 group-hover:text-orange-600 transition-colors">{displayName}</h3>
+            <p className="text-xs text-gray-500 font-medium mt-0.5 line-clamp-1">{displayDesc}</p>
           </div>
           <div className="flex flex-col gap-1.5 mt-2">
              <div className="flex text-xs items-center gap-1.5">
@@ -408,7 +502,7 @@ const ChickenCard = ({ group, toggleFavorite, favorites, openModal }: any) => {
         <div className="w-full sm:w-auto max-w-[70%]">
              <ScrollableRow className="flex gap-1.5 pb-1" paddingClass="px-0" arrowLeftClass="left-0" arrowRightClass="right-0">
                 {parts.map((partName: string, idx: number) => (
-                    <span key={idx} className="px-2 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-100 text-[10px] font-bold whitespace-nowrap flex-shrink-0"><span className="mr-1">{getPartEmoji(partName)}</span>{partName.trim()}</span>
+                    <span key={idx} className="px-2 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-100 text-[10px] font-bold whitespace-nowrap flex-shrink-0"><span className="mr-1">{getPartEmoji(partName)}</span>{getLocalizedPartName(partName, lang)}</span>
                 ))}
              </ScrollableRow>
         </div>
@@ -418,7 +512,7 @@ const ChickenCard = ({ group, toggleFavorite, favorites, openModal }: any) => {
   );
 };
 
-const DetailModal = ({ item, selectedPart, close, toggleFavorite, isFavorite, refreshData }: any) => {
+const DetailModal = ({ item, selectedPart, close, toggleFavorite, isFavorite, refreshData, lang }: any) => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [isFullScreenOrder, setIsFullScreenOrder] = useState(false);
   const [newRating, setNewRating] = useState(0);
@@ -430,6 +524,31 @@ const DetailModal = ({ item, selectedPart, close, toggleFavorite, isFavorite, re
   const parts = item.tags && item.tags.length > 0 ? item.tags : ["Whole Chicken"];
   const [currentPart, setCurrentPart] = useState<string>(selectedPart || parts[0]);
   const displayPartKr = getKoreanPartName(currentPart);
+  const displayPartLocalized = getLocalizedPartName(currentPart, lang);
+  const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+
+  const displayName = lang === 'ko' ? item.name_kr : (
+    lang === 'jp' ? (item.name_ja || item.name_en) : 
+    (lang === 'cn' ? (item.name_zh || item.name_en) : 
+    (lang === 'tw' ? (item.name_zhHant || item.name_en) : item.name_en))
+  );
+
+  const displaySubName = lang === 'ko' ? item.name_en : item.name_kr;
+
+  const displayDescText = lang === 'ko' ? item.desc_text : (
+    lang === 'en' ? (item.description_en || item.desc_text) :
+    (lang === 'jp' ? (item.description_ja || item.desc_text) : 
+    (lang === 'cn' ? (item.description_zh || item.desc_text) : 
+    (lang === 'tw' ? (item.description_zhHant || item.desc_text) : item.desc_text)))
+  );
+  
+  const displayAllergens = lang === 'ko' ? item.allergens : (
+    lang === 'en' ? (item.allergens_en || item.allergens) :
+    (lang === 'jp' ? (item.allergens_ja || item.allergens) : 
+    (lang === 'cn' ? (item.allergens_zh || item.allergens) : 
+    (lang === 'tw' ? (item.allergens_zhHant || item.allergens) : item.allergens)))
+  );
+
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const possibleKeys = useMemo(() => getMenuPossibleKeys(item.id, item.brand), [item.id, item.brand]);
@@ -473,109 +592,124 @@ const DetailModal = ({ item, selectedPart, close, toggleFavorite, isFavorite, re
     const newVal = (targetReview[column] || 0) + 1;
     setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, [column]: newVal } : r));
     const { error } = await supabase.from('reviews').update({ [column]: newVal }).eq('id', reviewId);
-    if(error) { toast.error("Action failed"); fetchReviews(); } else { if(action === 'helpful') toast.success("Marked as helpful!"); else toast("Reported.", { icon: '🚨' }); }
+    if(error) { toast.error("Action failed"); fetchReviews(); } else { if(action === 'helpful') toast.success(t.helpful); else toast(t.report, { icon: '🚨' }); }
   };
 
   const saveOrderCard = async () => {
     if (!orderCardRef.current) return;
-    try { const dataUrl = await toPng(orderCardRef.current, { cacheBust: true, backgroundColor: '#FFC107' }); const link = document.createElement('a'); link.download = `${item.name_en}_order_card.png`; link.href = dataUrl; link.click(); toast.success("Saved to Gallery! 📸"); } catch (err) { toast.error("Failed to save image."); }
+    try { const dataUrl = await toPng(orderCardRef.current, { cacheBust: true, backgroundColor: '#FFC107' }); const link = document.createElement('a'); link.download = `${item.name_en}_order_card.png`; link.href = dataUrl; link.click(); toast.success(t.save + "! 📸"); } catch (err) { toast.error("Failed to save image."); }
   };
+
+  if (isFullScreenOrder) {
+      return (
+          <div onClick={() => setIsFullScreenOrder(false)} className="fixed inset-0 z-[60] bg-[#FFC107] flex flex-col items-center justify-center p-6 animate-fade-in cursor-pointer">
+              <button onClick={(e) => { e.stopPropagation(); setIsFullScreenOrder(false); }} className="absolute top-6 right-6 text-white text-4xl font-black active:scale-90 shadow-sm drop-shadow-md">✕</button>
+              <div onClick={(e) => e.stopPropagation()} className="bg-white p-8 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] w-full max-w-sm relative text-center cursor-default">
+                  <div className="w-20 h-20 bg-orange-100 rounded-full mx-auto mb-6 flex items-center justify-center text-4xl shadow-inner">🍗</div>
+                  <h3 className="text-3xl font-black text-gray-900 mb-2 leading-tight break-keep">
+                      "{BRANDS[item.brand]?.name} <br/><span className="text-orange-600">{displayName}</span>"
+                  </h3>
+                   <p className="text-xl text-gray-700 font-bold mb-8">({displayPartKr})</p>
+                  <p className="text-2xl font-bold text-gray-900 mb-2">주세요!</p>
+                  <p className="text-sm text-gray-400">({t.msg_giveme})</p>
+              </div>
+              <div className="mt-8 text-white font-bold text-lg opacity-90 animate-pulse drop-shadow-md text-center">
+                  직원에게 이 화면을 보여주세요<br/>
+                  (Show this screen to staff)<br/>
+                  <span className="text-xs font-normal mt-2 block opacity-70">Tap anywhere to close</span>
+              </div>
+          </div>
+      );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={close}></div>
-      <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 z-10 relative animate-slide-up shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 sm:hidden"></div>
-        <div className="relative">
-          {imgSrc && (
-            <div className="w-full h-64 rounded-[24px] overflow-hidden mb-6 shadow-lg relative bg-gray-50">
-                <img src={imgSrc} alt={item.name_en} className="w-full h-full object-cover" onError={handleImgError} />
-                <div className="absolute top-4 left-4"><span className="text-xs font-black text-white px-3 py-1.5 rounded-full uppercase tracking-wider shadow-md backdrop-blur-md" style={{ backgroundColor: BRANDS[item.brand]?.color || "#333" }}>{BRANDS[item.brand]?.name || item.brand}</span></div>
+      {/* [Design] 모달 그림자 강화 */}
+      <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 z-10 relative animate-slide-up shadow-[0_0_50px_-10px_rgba(0,0,0,0.2)] overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="w-full pb-24 relative">
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 sm:hidden"></div>
+            {imgSrc && (
+                <div className="w-full h-64 rounded-[24px] overflow-hidden mb-6 shadow-lg relative bg-gray-50">
+                    <img src={imgSrc} alt={item.name_en} className="w-full h-full object-cover" onError={handleImgError} />
+                    <div className="absolute top-4 left-4"><span className="text-xs font-black text-white px-3 py-1.5 rounded-full uppercase tracking-wider shadow-md backdrop-blur-md" style={{ backgroundColor: BRANDS[item.brand]?.color || "#333" }}>{BRANDS[item.brand]?.name || item.brand}</span></div>
+                </div>
+            )}
+            <div className="flex justify-between items-start mb-2">
+                {!imgSrc && <div className="inline-block px-3 py-1 rounded-full text-[10px] font-black text-white uppercase tracking-wider shadow-md" style={{ backgroundColor: BRANDS[item.brand]?.color }}>{BRANDS[item.brand]?.name}</div>}
+                <button onClick={() => toggleFavorite(item.id)} className="text-2xl active:scale-125 transition-transform ml-auto p-2 bg-gray-50 rounded-full hover:bg-gray-100">{isFavorite ? "❤️" : "🤍"}</button>
             </div>
-          )}
-          <div className="flex justify-between items-start mb-2">
-            {!imgSrc && <div className="inline-block px-3 py-1 rounded-full text-[10px] font-black text-white uppercase tracking-wider shadow-md" style={{ backgroundColor: BRANDS[item.brand]?.color }}>{BRANDS[item.brand]?.name}</div>}
-            <button onClick={() => toggleFavorite(item.id)} className="text-2xl active:scale-125 transition-transform ml-auto p-2 bg-gray-50 rounded-full hover:bg-gray-100">{isFavorite ? "❤️" : "🤍"}</button>
-          </div>
-          {item.metrics.spicy >= 4 && <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-2.5 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2 animate-pulse shadow-sm">⚠️ WARNING: Extremely Spicy! (Bul-dak Level)</div>}
-          <h2 className="text-2xl font-black text-gray-900 leading-tight mb-1 pr-4">{item.name_en}</h2>
-          <p className="text-lg text-gray-400 font-medium mb-4">{item.name_kr}</p>
-          {item.desc_text && <div className="bg-gray-50 p-5 rounded-2xl mb-4 text-sm text-gray-600 leading-relaxed border border-gray-100"><span className="font-bold text-black block mb-1">Description</span>{item.desc_text}</div>}
-          {item.allergens && <div className="bg-red-50 p-4 rounded-2xl mb-6 text-xs text-red-600 font-medium border border-red-100 flex gap-2 items-start"><span className="text-lg">⚠️</span><div><span className="font-bold uppercase block text-red-700">Allergy Info</span>{item.allergens}</div></div>}
-          <div className="grid grid-cols-4 gap-2 mb-6">
-            {[{l:"Spicy",v:item.metrics.spicy,i:"🌶️"},{l:"Crunch",v:item.metrics.crunch,i:"💥"},{l:"Sweet",v:item.metrics.sweet,i:"🍯"},{l:"Garlic",v:item.metrics.garlic,i:"🧄"}].map(m=>(<div key={m.l} className="bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center gap-1 border border-gray-100"><span className="text-2xl mb-1">{m.i}</span><span className="text-[9px] font-bold text-gray-400 uppercase">{m.l}</span><div className="flex gap-0.5 mt-1">{[...Array(5)].map((_,i)=>(<div key={i} className={`w-1 h-2 rounded-full ${i<m.v?"bg-orange-500":"bg-gray-200"}`}></div>))}</div></div>))}
-          </div>
-          <div className="bg-orange-50 p-6 rounded-[24px] mb-4 border border-orange-100 relative overflow-hidden">
-            <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-orange-100 rounded-full opacity-50"></div>
-            <div className="flex justify-between items-center mb-3 relative z-10"><p className="text-xs text-orange-600 font-bold uppercase tracking-wide">Order Card</p><button onClick={()=>setIsFullScreenOrder(true)} className="text-[10px] bg-white text-orange-600 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-50 transition-colors shadow-sm">📱 Full Screen</button></div>
-            <div className="text-xl font-bold text-gray-900 break-keep leading-snug relative z-10">"{BRANDS[item.brand]?.name} <span className="text-orange-600">{item.name_kr}</span><span className="block text-lg text-gray-700 mt-1">({displayPartKr})</span>주세요."</div>
-            <p className="text-xs text-gray-400 mt-2 relative z-10">(Please give me this menu)</p>
-          </div>
-          
-          <div onMouseDown={()=>isDragging.current=false} onMouseMove={()=>isDragging.current=true}>
-            <ScrollableRow 
-                className="flex gap-2 mb-8 py-2" 
-                paddingClass="px-0" 
-                arrowYClass="top-[1px] bottom-auto"
-                arrowLeftClass="-left-2" 
-                arrowRightClass="-right-2"
-            >
-                {parts.map((part: string) => (
-                    <button key={part} onClick={(e) => { 
-                        if(isDragging.current) return;
-                        setCurrentPart(part); 
-                    }} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border whitespace-nowrap flex-shrink-0 ${currentPart === part ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200 ring-2 ring-orange-200 ring-offset-1" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-900"} active:scale-95`}><span className="mr-1.5 text-sm">{getPartEmoji(part)}</span>{part.trim()}</button>
-                ))}
-            </ScrollableRow>
-          </div>
+            {item.metrics.spicy >= 4 && <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-2.5 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2 animate-pulse shadow-sm">⚠️ WARNING: Extremely Spicy! (Bul-dak Level)</div>}
+            <h2 className="text-2xl font-black text-gray-900 leading-tight mb-1 pr-4">{displayName}</h2>
+            <p className="text-lg text-gray-400 font-medium mb-4">{displaySubName}</p>
+            {displayDescText && <div className="bg-gray-50 p-5 rounded-2xl mb-4 text-sm text-gray-600 leading-relaxed border border-gray-100"><span className="font-bold text-black block mb-1">{t.desc}</span>{displayDescText}</div>}
+            {item.allergens && <div className="bg-red-50 p-4 rounded-2xl mb-6 text-xs text-red-600 font-medium border border-red-100 flex gap-2 items-start"><span className="text-lg">⚠️</span><div><span className="font-bold uppercase block text-red-700">{t.allergy}</span>{displayAllergens}</div></div>}
+            <div className="grid grid-cols-4 gap-2 mb-6">
+                {[{l:t.spicy,v:item.metrics.spicy,i:"🌶️"},{l:t.crispy,v:item.metrics.crunch,i:"💥"},{l:t.sweet,v:item.metrics.sweet,i:"🍯"},{l:t.garlic,v:item.metrics.garlic,i:"🧄"}].map(m=>(<div key={m.l} className="bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center gap-1 border border-gray-100"><span className="text-2xl mb-1">{m.i}</span><span className="text-[9px] font-bold text-gray-400 uppercase">{m.l}</span><div className="flex gap-0.5 mt-1">{[...Array(5)].map((_,i)=>(<div key={i} className={`w-1 h-2 rounded-full ${i<m.v?"bg-orange-500":"bg-gray-200"}`}></div>))}</div></div>))}
+            </div>
+            
+            <div className="bg-orange-50 p-6 rounded-[24px] mb-4 border border-orange-100 relative overflow-hidden">
+                <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-orange-100 rounded-full opacity-50"></div>
+                <div className="flex justify-between items-center mb-3 relative z-10"><p className="text-xs text-orange-600 font-bold uppercase tracking-wide">{t.order}</p><button onClick={()=>setIsFullScreenOrder(true)} className="text-[10px] bg-white text-orange-600 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-50 transition-colors shadow-sm">📱 {t.fullScreen}</button></div>
+                <div className="text-xl font-bold text-gray-900 break-keep leading-snug relative z-10">"{BRANDS[item.brand]?.name} <span className="text-orange-600">{item.name_kr}</span><span className="block text-lg text-gray-700 mt-1">({displayPartKr})</span>주세요."</div>
+                <p className="text-xs text-gray-400 mt-2 relative z-10">({t.msg_giveme})</p>
+            </div>
+            
+            <div onMouseDown={()=>isDragging.current=false} onMouseMove={()=>isDragging.current=true}>
+                <ScrollableRow 
+                    className="flex gap-2 mb-8 py-2" 
+                    paddingClass="px-0" 
+                    arrowYClass="top-[1px] bottom-auto"
+                    arrowLeftClass="-left-2" 
+                    arrowRightClass="-right-2"
+                >
+                    {parts.map((part: string) => (
+                        <button key={part} onClick={(e) => { 
+                            if(isDragging.current) return;
+                            setCurrentPart(part); 
+                        }} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border whitespace-nowrap flex-shrink-0 ${currentPart === part ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200 ring-2 ring-orange-200 ring-offset-1" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-900"} active:scale-95`}><span className="mr-1.5 text-sm">{getPartEmoji(part)}</span>{getLocalizedPartName(part, lang)}</button>
+                    ))}
+                </ScrollableRow>
+            </div>
 
-          <hr className="border-gray-100 mb-6" />
-          <div className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Reviews & Rating</h3>
-            <div className="bg-white p-5 rounded-[24px] border border-gray-100 mb-6 shadow-sm focus-within:ring-2 ring-orange-100 transition-all">
-                <div className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">Leave a Review</div>
-                <div className="flex justify-center mb-4 gap-2">{[1,2,3,4,5].map(idx=>{let fill=0;if(newRating>=idx)fill=1;else if(newRating>=idx-0.5)fill=0.5;return(<div key={idx} className="relative cursor-pointer w-8 h-8 group"><div className="w-full h-full text-gray-200 absolute"><StarIcon fill={0}/></div><div className="w-full h-full absolute text-yellow-400 transition-all duration-200"><StarIcon fill={fill}/></div><div className="absolute left-0 top-0 w-1/2 h-full z-10" onClick={()=>setNewRating(idx-0.5)}></div><div className="absolute right-0 top-0 w-1/2 h-full left-1/2 z-10" onClick={()=>setNewRating(idx)}></div></div>)})}</div>
-                <div className="flex flex-wrap gap-2 mb-4 justify-center">{REVIEW_TAGS.map(tag => (<button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all active:scale-95 ${selectedTags.includes(tag) ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200" : "bg-gray-50 text-gray-500 border-gray-200"}`}>{tag}</button>))}</div>
-                <input type="text" placeholder="Short review (e.g. Best chicken ever!)" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 mb-2 focus:outline-none focus:border-orange-500 focus:bg-white transition-colors" value={newComment} onChange={e=>setNewComment(e.target.value)}/>
-                <input type="password" placeholder="Password (for deletion later)" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-xs font-medium text-gray-900 placeholder:text-gray-400 mb-3 focus:outline-none focus:border-orange-500 focus:bg-white transition-colors" value={newPassword} onChange={e=>setNewPassword(e.target.value)}/>
-                <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl text-sm hover:bg-black transition-all shadow-lg active:scale-95">{isSubmitting?"Saving...":"Submit Review"}</button>
+            <hr className="border-gray-100 mb-6" />
+            <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">{t.reviews}</h3>
+                <div className="bg-white p-5 rounded-[24px] border border-gray-100 mb-6 shadow-sm focus-within:ring-2 ring-orange-100 transition-all">
+                    <div className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">{t.leaveReview}</div>
+                    <div className="flex justify-center mb-4 gap-2">{[1,2,3,4,5].map(idx=>{let fill=0;if(newRating>=idx)fill=1;else if(newRating>=idx-0.5)fill=0.5;return(<div key={idx} className="relative cursor-pointer w-8 h-8 group"><div className="w-full h-full text-gray-200 absolute"><StarIcon fill={0}/></div><div className="w-full h-full absolute text-yellow-400 transition-all duration-200"><StarIcon fill={fill}/></div><div className="absolute left-0 top-0 w-1/2 h-full z-10" onClick={()=>setNewRating(idx-0.5)}></div><div className="absolute right-0 top-0 w-1/2 h-full left-1/2 z-10" onClick={()=>setNewRating(idx)}></div></div>)})}</div>
+                    <div className="flex flex-wrap gap-2 mb-4 justify-center">{REVIEW_TAGS.map(tag => (<button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all active:scale-95 ${selectedTags.includes(tag) ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200" : "bg-gray-50 text-gray-500 border-gray-200"}`}>{tag}</button>))}</div>
+                    <input type="text" placeholder={t.placeholder_content} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 mb-2 focus:outline-none focus:border-orange-500 focus:bg-white transition-colors" value={newComment} onChange={e=>setNewComment(e.target.value)}/>
+                    <input type="password" placeholder={t.placeholder_pw} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-xs font-medium text-gray-900 placeholder:text-gray-400 mb-3 focus:outline-none focus:border-orange-500 focus:bg-white transition-colors" value={newPassword} onChange={e=>setNewPassword(e.target.value)}/>
+                    <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl text-sm hover:bg-black transition-all shadow-lg active:scale-95">{isSubmitting?"Saving...":t.submit}</button>
+                </div>
+                <div className="space-y-3">
+                    {reviews.length===0?<p className="text-center text-gray-400 text-sm py-4">No reviews yet. Be the first!</p>:reviews.map(rev=>(
+                        <div key={rev.id} className="bg-white border border-gray-100 p-5 rounded-[20px] shadow-sm flex flex-col gap-2">
+                            <div className="flex justify-between items-center"><div className="flex items-center gap-1"><div className="flex text-yellow-400 w-16"><StarIcon fill={1}/></div><span className="text-sm font-bold ml-[-30px] pt-1">{rev.rating}</span></div><span className="text-[10px] text-gray-400">{new Date(rev.created_at).toLocaleDateString()}</span></div>
+                            {rev.tags && rev.tags.length > 0 && <div className="flex flex-wrap gap-1">{rev.tags.map((t: string) => (<span key={t} className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md border border-orange-100">{t}</span>))}</div>}
+                            <p className="text-sm text-gray-800 font-medium leading-relaxed">{rev.content}</p>
+                            <div className="flex justify-end gap-3 mt-1 pt-3 border-t border-gray-50"><button onClick={()=>handleReviewAction(rev.id, 'helpful')} className="text-[11px] text-gray-400 hover:text-green-600 flex items-center gap-1 transition-colors">👍 {t.helpful} ({rev.helpful_count||0})</button><button onClick={()=>handleReviewAction(rev.id, 'report')} className="text-[11px] text-gray-300 hover:text-red-500 flex items-center gap-1 transition-colors">🚨 {t.report}</button></div>
+                        </div>
+                    ))}
+                </div>
             </div>
-            <div className="space-y-3">
-                {reviews.length===0?<p className="text-center text-gray-400 text-sm py-4">No reviews yet. Be the first!</p>:reviews.map(rev=>(
-                    <div key={rev.id} className="bg-white border border-gray-100 p-5 rounded-[20px] shadow-sm flex flex-col gap-2">
-                        <div className="flex justify-between items-center"><div className="flex items-center gap-1"><div className="flex text-yellow-400 w-16"><StarIcon fill={1}/></div><span className="text-sm font-bold ml-[-30px] pt-1">{rev.rating}</span></div><span className="text-[10px] text-gray-400">{new Date(rev.created_at).toLocaleDateString()}</span></div>
-                        {rev.tags && rev.tags.length > 0 && <div className="flex flex-wrap gap-1">{rev.tags.map((t: string) => (<span key={t} className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md border border-orange-100">{t}</span>))}</div>}
-                        <p className="text-sm text-gray-800 font-medium leading-relaxed">{rev.content}</p>
-                        <div className="flex justify-end gap-3 mt-1 pt-3 border-t border-gray-50"><button onClick={()=>handleReviewAction(rev.id, 'helpful')} className="text-[11px] text-gray-400 hover:text-green-600 flex items-center gap-1 transition-colors">👍 Helpful ({rev.helpful_count||0})</button><button onClick={()=>handleReviewAction(rev.id, 'report')} className="text-[11px] text-gray-300 hover:text-red-500 flex items-center gap-1 transition-colors">🚨 Report</button></div>
-                    </div>
-                ))}
-            </div>
-          </div>
-          <div className="flex gap-3 sticky bottom-0 bg-white pt-2 pb-0"><a href={`https://map.naver.com/v5/search/${BRANDS[item.brand]?.name}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#03C75A] text-white font-bold py-4 rounded-2xl text-center shadow-lg active:scale-95 transition-transform hover:bg-[#02b351]">📍 Find Store</a><button onClick={close} className="flex-1 bg-gray-100 text-black font-bold py-4 rounded-2xl text-lg active:scale-95 transition-transform shadow-lg hover:bg-gray-200">Close</button></div>
         </div>
+        
+        {/* [Design] 하단 고정 버튼 그림자 수정 */}
+        <div className="flex gap-3 sticky bottom-0 bg-white/80 backdrop-blur-md pt-4 pb-6 px-6 -mx-6 z-[999] border-t border-gray-100 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]"><a href={`https://map.naver.com/v5/search/${BRANDS[item.brand]?.name}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#03C75A] text-white font-bold py-4 rounded-2xl text-center shadow-lg shadow-green-100 active:scale-95 transition-transform hover:bg-[#02b351]">📍 {t.findStore}</a><button onClick={close} className="flex-1 bg-gray-100 text-black font-bold py-4 rounded-2xl text-lg active:scale-95 transition-transform shadow-sm hover:bg-gray-200">{t.close}</button></div>
       </div>
-      {isFullScreenOrder && (
-        <div className="fixed inset-0 z-[100] bg-[#FFC107] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
-          <button onClick={() => setIsFullScreenOrder(false)} className="absolute top-6 right-6 text-4xl text-black font-black hover:scale-110 transition-transform">✕</button>
-          <div ref={orderCardRef} className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-sm border-4 border-black transform -rotate-1 relative">
-            {imgSrc && <div className="w-full h-40 rounded-2xl overflow-hidden mb-4 border border-gray-100"><img src={imgSrc} alt={item.name_en} className="w-full h-full object-cover" onError={handleImgError} /></div>}
-            <p className="text-lg font-bold text-gray-500 mb-2 uppercase tracking-wide">{BRANDS[item.brand]?.name}</p>
-            <h1 className="text-5xl font-black text-black leading-tight break-keep mb-6">{item.name_kr}</h1>
-            <p className="text-2xl font-bold text-gray-600 mb-8">({displayPartKr})</p>
-            <div className="text-3xl font-black text-orange-600 border-t-2 border-dashed border-gray-200 pt-6">주세요!</div>
-            <p className="text-[10px] text-gray-300 mt-4 text-center w-full">ChickenPick - Official Guide</p>
-          </div>
-          <button onClick={saveOrderCard} className="mt-8 bg-black text-white px-6 py-3 rounded-full font-bold shadow-xl active:scale-95 transition-transform flex items-center gap-2">📸 Save as Image</button>
-        </div>
-      )}
     </div>
   );
 };
 
-const CommunityCard = ({ post, dbMenus, onClick }: any) => {
+const CommunityCard = ({ post, dbMenus, onClick, lang }: any) => {
     const taggedItem = post.menu_id ? dbMenus.find((m: any) => m.id === post.menu_id) : null;
+    const t = TRANSLATIONS[lang];
+    const dateLocale = lang === 'ko' ? ko : lang === 'jp' ? ja : lang === 'cn' ? zhCN : enUS;
+
     return (
-        <div onClick={onClick} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.99] flex gap-4">
+        <div onClick={onClick} className="bg-white p-4 rounded-[20px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 mb-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.99] flex gap-4">
             <div className="flex flex-col items-center justify-center min-w-[40px] border-r border-gray-100 pr-4">
                 <span className="text-lg text-orange-500">▲</span>
                 <span className="font-bold text-sm text-gray-700">{post.upvotes || 0}</span>
@@ -583,13 +717,13 @@ const CommunityCard = ({ post, dbMenus, onClick }: any) => {
             <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-bold text-gray-500">{post.nickname}</span>
-                    <span className="text-[10px] text-gray-400">• {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ko })}</span>
+                    <span className="text-[10px] text-gray-400">• {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: dateLocale })}</span>
                 </div>
                 <h3 className="font-bold text-lg text-gray-900 mb-1 leading-tight">{post.title}</h3>
                 <p className="text-sm text-gray-500 line-clamp-2 mb-2">{post.content}</p>
                 <div className="flex gap-2">
-                    {taggedItem && <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-[10px] font-bold border border-orange-100">🍗 {taggedItem.name_en}</span>}
-                    {post.poll_options && <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold border border-blue-100">📊 Vote</span>}
+                    {taggedItem && <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-[10px] font-bold border border-orange-100">🍗 {lang === 'ko' ? taggedItem.name_kr : taggedItem.name_en}</span>}
+                    {post.poll_options && <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold border border-blue-100">📊 {t.vote}</span>}
                 </div>
             </div>
             {post.image_url && <div className="w-20 h-20 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden"><img src={post.image_url} className="w-full h-full object-cover" alt="post" /></div>}
@@ -597,7 +731,7 @@ const CommunityCard = ({ post, dbMenus, onClick }: any) => {
     );
 };
 
-const CommunityWriteModal = ({ close, refresh, dbMenus }: any) => {
+const CommunityWriteModal = ({ close, refresh, dbMenus, lang }: any) => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [nickname, setNickname] = useState("");
@@ -609,6 +743,7 @@ const CommunityWriteModal = ({ close, refresh, dbMenus }: any) => {
     const [taggedMenuId, setTaggedMenuId] = useState<string | null>(null);
     const [isTagInputFocused, setIsTagInputFocused] = useState(false);
     const [pollSearchQuery, setPollSearchQuery] = useState<{idx: number, query: string} | null>(null);
+    const t = TRANSLATIONS[lang];
 
     const filteredMenus = useMemo(() => {
         if (!searchMenu && isTagInputFocused) return dbMenus.slice(0, 50); 
@@ -642,13 +777,13 @@ const CommunityWriteModal = ({ close, refresh, dbMenus }: any) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close}></div>
             <div className="bg-white w-full max-w-lg rounded-[30px] p-6 z-10 relative animate-slide-up max-h-[90vh] overflow-y-auto">
-                <h2 className="text-xl font-black text-gray-900 mb-6">Write Post ✏️</h2>
+                <h2 className="text-xl font-black text-gray-900 mb-6">{t.leaveReview} ✏️</h2>
                 <div className="flex gap-2 mb-4">
-                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500" placeholder="Nickname" value={nickname} onChange={e=>setNickname(e.target.value)} />
-                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500" type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
+                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500" placeholder={t.placeholder_nick} value={nickname} onChange={e=>setNickname(e.target.value)} />
+                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500" type="password" placeholder={t.placeholder_pw} value={password} onChange={e=>setPassword(e.target.value)} />
                 </div>
-                <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 placeholder:text-gray-400 mb-4 focus:outline-none focus:border-orange-500" placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} />
-                <textarea className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 mb-4 h-32 focus:outline-none focus:border-orange-500" placeholder="What's on your mind?" value={content} onChange={e=>setContent(e.target.value)}></textarea>
+                <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 placeholder:text-gray-400 mb-4 focus:outline-none focus:border-orange-500" placeholder={t.placeholder_title} value={title} onChange={e=>setTitle(e.target.value)} />
+                <textarea className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 mb-4 h-32 focus:outline-none focus:border-orange-500" placeholder={t.placeholder_content} value={content} onChange={e=>setContent(e.target.value)}></textarea>
                 
                 <div className="mb-4 relative">
                     <p className="text-xs font-bold text-gray-400 mb-2">Tag Chicken (Optional)</p>
@@ -660,7 +795,7 @@ const CommunityWriteModal = ({ close, refresh, dbMenus }: any) => {
                         </div>
                     ) : (
                         <div>
-                            <input className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-200" placeholder="Search chicken..." value={searchMenu} onChange={e=>setSearchMenu(e.target.value)} onFocus={() => setIsTagInputFocused(true)}/>
+                            <input className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-200" placeholder={t.search} value={searchMenu} onChange={e=>setSearchMenu(e.target.value)} onFocus={() => setIsTagInputFocused(true)}/>
                             {(searchMenu || isTagInputFocused) && filteredMenus.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-xl mt-1 z-50 max-h-48 overflow-y-auto">
                                     {filteredMenus.map((m:any) => (
@@ -673,7 +808,7 @@ const CommunityWriteModal = ({ close, refresh, dbMenus }: any) => {
                 </div>
 
                 <div className="mb-6">
-                    <label className="flex items-center gap-2 cursor-pointer mb-2"><input type="checkbox" checked={isPoll} onChange={e=>setIsPoll(e.target.checked)} className="accent-orange-500 w-4 h-4" /><span className="text-sm font-bold text-gray-600">Create Poll 📊</span></label>
+                    <label className="flex items-center gap-2 cursor-pointer mb-2"><input type="checkbox" checked={isPoll} onChange={e=>setIsPoll(e.target.checked)} className="accent-orange-500 w-4 h-4" /><span className="text-sm font-bold text-gray-600">{t.poll} 📊</span></label>
                     {isPoll && (
                         <div className="space-y-3 pl-4 border-l-2 border-orange-100 mt-3">
                             {pollOptions.map((opt, idx) => (
@@ -698,12 +833,14 @@ const CommunityWriteModal = ({ close, refresh, dbMenus }: any) => {
     );
 };
 
-const CommunityPostModal = ({ postId, close, dbMenus, setSelectedItem }: any) => {
+const CommunityPostModal = ({ postId, close, dbMenus, setSelectedItem, lang }: any) => {
     const [post, setPost] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [cmtContent, setCmtContent] = useState("");
     const [cmtNick, setCmtNick] = useState("");
     const [cmtPw, setCmtPw] = useState("");
+    const t = TRANSLATIONS[lang];
+    const dateLocale = lang === 'ko' ? ko : lang === 'jp' ? ja : lang === 'cn' ? zhCN : enUS;
 
     useEffect(() => {
         const load = async () => {
@@ -721,7 +858,7 @@ const CommunityPostModal = ({ postId, close, dbMenus, setSelectedItem }: any) =>
         const newVotes = { ...post.poll_votes, [optIdx]: (post.poll_votes[optIdx] || 0) + 1 };
         setPost({ ...post, poll_votes: newVotes });
         await supabase.from('posts').update({ poll_votes: newVotes }).eq('id', postId);
-        toast.success("Voted!");
+        toast.success(t.vote + "!");
     };
 
     const handleComment = async () => {
@@ -755,11 +892,11 @@ const CommunityPostModal = ({ postId, close, dbMenus, setSelectedItem }: any) =>
                 )}
                 
                 {post.poll_options && (
-                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6"><p className="text-xs font-bold text-gray-500 mb-3 uppercase">Poll</p><div className="space-y-2">{post.poll_options.map((opt: string, idx: number) => { const votes = post.poll_votes?.[idx] || 0; const percent = (totalVotes as number) > 0 ? Math.round((votes / (totalVotes as number)) * 100) : 0; return (<button key={idx} onClick={() => handleVote(idx)} className="w-full relative h-10 rounded-lg bg-white border border-gray-200 overflow-hidden text-left hover:border-orange-500 transition-colors"><div className="absolute top-0 left-0 h-full bg-orange-100 transition-all duration-500" style={{ width: `${percent}%` }}></div><div className="absolute inset-0 flex items-center justify-between px-3"><span className="text-sm font-bold text-gray-700 z-10">{opt}</span><span className="text-xs text-orange-600 font-bold z-10">{percent}% ({votes})</span></div></button>)})}</div></div>
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6"><p className="text-xs font-bold text-gray-500 mb-3 uppercase">{t.poll}</p><div className="space-y-2">{post.poll_options.map((opt: string, idx: number) => { const votes = post.poll_votes?.[idx] || 0; const percent = (totalVotes as number) > 0 ? Math.round((votes / (totalVotes as number)) * 100) : 0; return (<button key={idx} onClick={() => handleVote(idx)} className="w-full relative h-10 rounded-lg bg-white border border-gray-200 overflow-hidden text-left hover:border-orange-500 transition-colors"><div className="absolute top-0 left-0 h-full bg-orange-100 transition-all duration-500" style={{ width: `${percent}%` }}></div><div className="absolute inset-0 flex items-center justify-between px-3"><span className="text-sm font-bold text-gray-700 z-10">{opt}</span><span className="text-xs text-orange-600 font-bold z-10">{percent}% ({votes})</span></div></button>)})}</div></div>
                 )}
                 
                 <hr className="border-gray-100 mb-6" />
-                <div className="mb-20"><h3 className="font-bold text-lg mb-4">Comments ({comments.length})</h3><div className="space-y-4 mb-6">{comments.map(c => (<div key={c.id} className="bg-gray-50 p-3 rounded-xl"><div className="flex justify-between items-center mb-1"><span className="text-xs font-bold text-gray-900">{c.nickname}</span><span className="text-[10px] text-gray-400">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</span></div><p className="text-sm text-gray-700">{c.content}</p></div>))}</div><div className="flex gap-2 mb-2"><input className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs" placeholder="Nick" value={cmtNick} onChange={e=>setCmtNick(e.target.value)} /><input className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs" type="password" placeholder="PW" value={cmtPw} onChange={e=>setCmtPw(e.target.value)} /></div><div className="flex gap-2"><input className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Add a comment..." value={cmtContent} onChange={e=>setCmtContent(e.target.value)} /><button onClick={handleComment} className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold">Send</button></div></div>
+                <div className="mb-20"><h3 className="font-bold text-lg mb-4">Comments ({comments.length})</h3><div className="space-y-4 mb-6">{comments.map(c => (<div key={c.id} className="bg-gray-50 p-3 rounded-xl"><div className="flex justify-between items-center mb-1"><span className="text-xs font-bold text-gray-900">{c.nickname}</span><span className="text-[10px] text-gray-400">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: dateLocale })}</span></div><p className="text-sm text-gray-700">{c.content}</p></div>))}</div><div className="flex gap-2 mb-2"><input className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs" placeholder={t.placeholder_nick} value={cmtNick} onChange={e=>setCmtNick(e.target.value)} /><input className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs" type="password" placeholder={t.placeholder_pw} value={cmtPw} onChange={e=>setCmtPw(e.target.value)} /></div><div className="flex gap-2"><input className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t.placeholder_content} value={cmtContent} onChange={e=>setCmtContent(e.target.value)} /><button onClick={handleComment} className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold">Send</button></div></div>
             </div>
         </div>
     );
@@ -783,23 +920,40 @@ export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
   const [viewPostId, setViewPostId] = useState<number | null>(null);
+  const [lang, setLang] = useState("en"); 
   const isDragging = useRef(false);
 
+  const t = TRANSLATIONS[lang];
+
   const fetchMenus = async () => {
+    setIsLoading(true); 
     const { data, error } = await supabase.from("menus").select("*");
-    if (error) { toast.error("Failed to load menus"); setIsLoading(false); return; }
+    
+    if (error) { 
+        toast.error("Failed to load menus"); 
+        setIsLoading(false); 
+        return; 
+    }
+
     if (data) {
       const mapped = data.map((item: any) => ({
         ...item,
-        desc: item.desc_text,
-        metrics: { spicy: item.metrics?.spicy ?? 0, crunch: item.metrics?.crunch ?? 0, sweet: item.metrics?.sweet ?? 0, garlic: item.metrics?.garlic ?? 0 },
+        description_en: item['description(en)'] || item.description_en || "",
+        allergens_en: item['allergens(en)'] || item.allergens_en || "",
+        desc_text: item.desc_text || item.description,
+        desc: item.desc_text || item.description,      
+        metrics: { 
+            spicy: item.metrics?.spicy ?? 0, 
+            crunch: item.metrics?.crunch ?? 0, 
+            sweet: item.metrics?.sweet ?? 0, 
+            garlic: item.metrics?.garlic ?? 0 
+        },
         tags: item.tags ?? [],
       }));
       setDbMenus(mapped);
     }
     setIsLoading(false);
   };
-
   const fetchPosts = async () => {
     const { data } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
     if(data) setPosts(data);
@@ -865,43 +1019,50 @@ export default function Home() {
       <style jsx global>{` @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"); body { font-family: 'Pretendard', sans-serif; } `}</style>
       <Toaster position="bottom-center" toastOptions={{style:{background:'#1F2937',color:'#fff',fontSize:'14px',borderRadius:'12px', padding: '12px 20px'}}} />
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl shadow-black/5 relative">
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-5 py-4">
-          <div className="flex justify-between items-end mb-4">
+        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-5 py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
+          <div className="flex justify-between items-center mb-6">
             <div onClick={() => { window.location.reload(); setViewMode("home"); }} className="cursor-pointer active:scale-95 transition-transform">
               <h1 className="text-3xl font-black text-orange-500 tracking-tighter leading-none">CHICKEN<span className="text-gray-900">PICK</span></h1>
               <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-1">The Official K-Chicken Guide</p>
             </div>
-            <div className="flex gap-2">
-                <div className="flex gap-2 items-center"> {/* [FIX] Added wrapper div for proper alignment */}
-                  <button onClick={() => setViewMode(viewMode === "home" ? "community" : "home")} className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all active:scale-95 flex items-center gap-1 h-fit ${viewMode === 'community' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-500'}`}>{viewMode === "home" ? "💬 Community" : "🏠 Home"}</button>
-                  {viewMode === "home" && (<button onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all active:scale-95 flex items-center gap-1 h-fit ${showFavoritesOnly ? 'bg-red-500 text-white shadow-lg shadow-red-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>❤️ Picks ({favorites.length})</button>)}
+            {/* [FIX: Header Layout] 언어 선택을 위로, 커뮤니티/픽 버튼을 아래로 */}
+            <div className="flex flex-col items-end gap-1.5">
+                <select value={lang} onChange={(e) => setLang(e.target.value)} className="h-7 text-[11px] font-bold px-2 rounded-full bg-gray-50 text-gray-600 border border-gray-200 outline-none cursor-pointer hover:bg-gray-100">
+                    <option value="en">🇺🇸 EN</option>
+                    <option value="ko">🇰🇷 KR</option>
+                    <option value="jp">🇯🇵 JP</option>
+                    <option value="cn">🇨🇳 CN</option>
+                    <option value="tw">🇹🇼 TW</option>
+                </select>
+                <div className="flex gap-2">
+                    <button onClick={() => setViewMode(viewMode === "home" ? "community" : "home")} className={`h-8 text-xs font-bold px-3 rounded-full transition-all active:scale-95 flex items-center gap-1 ${viewMode === 'community' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'bg-gray-100 text-gray-500'}`}>{viewMode === "home" ? `💬 ${t.community}` : `🏠 ${t.home}`}</button>
+                    {viewMode === "home" && (<button onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} className={`h-8 text-xs font-bold px-3 rounded-full transition-all active:scale-95 flex items-center gap-1 ${showFavoritesOnly ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>❤️ {t.picks} ({favorites.length})</button>)}
                 </div>
             </div>
           </div>
           {viewMode === "home" && (
               <>
                 <div className="flex gap-2 mb-4">
-                    <div className="relative group flex-1"><input type="text" placeholder="Search..." className="w-full bg-gray-100 rounded-2xl py-3.5 pl-10 pr-4 text-sm font-semibold focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-100 transition-all" onChange={(e) => setSearchText(e.target.value)} /><span className="absolute left-3.5 top-3.5 text-gray-400">🔍</span></div>
-                    <select value={sortBy} onChange={(e:any) => setSortBy(e.target.value)} className="bg-white border border-gray-200 rounded-2xl px-3 text-xs font-bold text-gray-600 focus:outline-none focus:border-orange-500 outline-none"><option value="rating">⭐ Rating</option><option value="name">🔤 Name</option><option value="brand">🏷️ Brand</option></select>
+                    <div className="relative group flex-1"><input type="text" placeholder={t.search} className="w-full bg-gray-100 rounded-2xl py-3.5 pl-10 pr-4 text-sm font-semibold focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-100 transition-all" onChange={(e) => setSearchText(e.target.value)} value={searchText}/><span className="absolute left-3.5 top-3.5 text-gray-400">🔍</span></div>
+                    <select value={sortBy} onChange={(e:any) => setSortBy(e.target.value)} className="bg-white border border-gray-200 rounded-2xl px-3 text-xs font-bold text-gray-600 focus:outline-none focus:border-orange-500 outline-none"><option value="rating">⭐ {t.rating}</option><option value="name">🔤 {t.name}</option><option value="brand">🏷️ {t.brand}</option></select>
                 </div>
                 {!showFavoritesOnly && (
                     <div onMouseDown={()=>isDragging.current=false} onMouseMove={()=>isDragging.current=true}>
-                    {/* [수정] 맛 필터: 화살표 복구 (Goal 1 - showArrows={true}로 변경) 및 정렬 유지 */}
                     <ScrollableRow className="flex gap-2 pb-1 items-center" paddingClass="px-5" arrowYClass="top-0 bottom-0 items-center" arrowLeftClass="left-0" arrowRightClass="right-0">
-                    <button onClick={(e) => { if(isDragging.current) return; toggleFilter("all"); }} className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 flex-shrink-0 ${activeFilters.length === 0 ? "bg-gray-900 text-white shadow-lg shadow-gray-200" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>All</button>
+                    <button onClick={(e) => { if(isDragging.current) return; toggleFilter("all"); }} className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 flex-shrink-0 ${activeFilters.length === 0 ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>{t.all}</button>
                     <div className={`flex items-center rounded-2xl transition-all flex-shrink-0 border ${activeFilters.includes("spicy") ? "bg-red-50 border-red-200 pr-1" : "bg-white border-gray-200"}`}>
-                        <button onClick={() => toggleFilter("spicy")} className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${activeFilters.includes("spicy") ? "text-red-600" : "text-gray-500 hover:text-gray-900"}`}>🔥 Spicy</button>
-                        {activeFilters.includes("spicy") && (<div className="flex gap-1 animate-fade-in pl-1"><button onClick={(e) => { if(isDragging.current) return; setSpicyFilter(null); }} className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center transition-colors ${spicyFilter === null ? "bg-red-500 text-white shadow-md" : "bg-white border border-red-200 text-red-400"}`}>All</button>{[1, 2, 3, 4, 5].map(lv => (<button key={lv} onClick={() => { if(isDragging.current) return; setSpicyFilter(lv); }} className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center transition-colors ${spicyFilter === lv ? "bg-red-500 text-white shadow-md" : "bg-white border border-red-200 text-red-400"}`}>{lv}</button>))}</div>)}
+                        <button onClick={() => toggleFilter("spicy")} className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${activeFilters.includes("spicy") ? "text-red-600" : "text-gray-500 hover:text-gray-900"}`}>🔥 {t.spicy}</button>
+                        {activeFilters.includes("spicy") && (<div className="flex gap-1 animate-fade-in pl-1"><button onClick={(e) => { if(isDragging.current) return; setSpicyFilter(null); }} className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center transition-colors ${spicyFilter === null ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "bg-white border border-red-200 text-red-400"}`}>{t.all}</button>{[1, 2, 3, 4, 5].map(lv => (<button key={lv} onClick={() => { if(isDragging.current) return; setSpicyFilter(lv); }} className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center transition-colors ${spicyFilter === lv ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "bg-white border border-red-200 text-red-400"}`}>{lv}</button>))}</div>)}
                     </div>
-                    {[{id:"crunch",l:"💥 Crispy"},{id:"sweet",l:"🍯 Sweet"},{id:"cheese",l:"🧀 Cheese"},{id:"garlic",l:"🧄 Garlic"},{id:"boneless",l:"🍗 Boneless"}].map(btn => (
-                        <button key={btn.id} onClick={() => toggleFilter(btn.id)} className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 flex-shrink-0 ${activeFilters.includes(btn.id) ? "bg-gray-900 text-white shadow-lg shadow-gray-200 ring-2 ring-gray-900 ring-offset-1" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>{btn.l}</button>
+                    {[{id:"crunch",l:`💥 ${t.crispy}`},{id:"sweet",l:`🍯 ${t.sweet}`},{id:"cheese",l:`🧀 ${t.cheese}`},{id:"garlic",l:`🧄 ${t.garlic}`},{id:"boneless",l:`🍗 ${t.boneless}`}].map(btn => (
+                        <button key={btn.id} onClick={() => toggleFilter(btn.id)} className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 flex-shrink-0 ${activeFilters.includes(btn.id) ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20 ring-2 ring-gray-900 ring-offset-1" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>{btn.l}</button>
                     ))}
                     </ScrollableRow>
                     </div>
                 )}
               </>
           )}
-          {viewMode === "community" && (<div className="py-2"><h2 className="text-xl font-bold text-gray-900 mb-1">Community 🔥</h2><p className="text-sm text-gray-500">Let's talk about Chicken!</p></div>)}
+          {viewMode === "community" && (<div className="py-2"><h2 className="text-xl font-bold text-gray-900 mb-1">{t.community} 🔥</h2><p className="text-sm text-gray-500">Let's talk about Chicken!</p></div>)}
         </header>
 
         {viewMode === "home" && (
@@ -919,7 +1080,15 @@ export default function Home() {
                 </div>
                 )}
                 <div className="p-5 space-y-6 bg-gray-50/50 min-h-[60vh]">
-                {isLoading && dbMenus.length === 0 ? ([...Array(5)].map((_, i) => <ChickenCardSkeleton key={i} />)) : visibleGroups.length === 0 ? (<div className="text-center py-24 text-gray-300"><div className="text-6xl mb-4 grayscale opacity-50">🐔❓</div><p className="font-bold">No chicken found.</p></div>) : (visibleGroups.map((group: any) => (<ChickenCard key={group.baseName + group.variants[0].brand} group={group} toggleFavorite={toggleFavorite} favorites={favorites} openModal={(item: any) => setSelectedItem({item, part: (item.tags && item.tags.length>0 ? item.tags[0] : "Whole")})} />)))}
+                {isLoading && dbMenus.length === 0 ? ([...Array(5)].map((_, i) => <ChickenCardSkeleton key={i} />)) : visibleGroups.length === 0 ? (
+                    <div className="text-center py-24 text-gray-300">
+                        <div className="text-6xl mb-4 grayscale opacity-50">🐔❓</div>
+                        <p className="font-bold mb-4">{t.no_result}</p>
+                        <button onClick={() => { setActiveFilters([]); setSearchText(""); setCurrentBrand("all"); setSpicyFilter(null); }} className="bg-gray-200 text-gray-600 font-bold py-2 px-4 rounded-xl text-xs hover:bg-gray-300 transition-colors active:scale-95">
+                            🔄 {t.reset}
+                        </button>
+                    </div>
+                ) : (visibleGroups.map((group: any) => (<ChickenCard key={group.baseName + group.variants[0].brand} group={group} toggleFavorite={toggleFavorite} favorites={favorites} openModal={(item: any) => setSelectedItem({item, part: (item.tags && item.tags.length>0 ? item.tags[0] : "Whole")})} lang={lang} />)))}
                 {!isLoading && visibleCount < groupedMenuData.length && <div className="text-center py-8"><div className="inline-block w-8 h-8 border-[3px] border-orange-200 border-t-orange-500 rounded-full animate-spin"></div></div>}
                 </div>
             </>
@@ -927,17 +1096,17 @@ export default function Home() {
 
         {viewMode === "community" && (
             <div className="p-5 bg-gray-50/50 min-h-[80vh]">
-                {posts.map(post => <CommunityCard key={post.id} post={post} dbMenus={dbMenus} onClick={() => setViewPostId(post.id)} />)}
+                {posts.map(post => <CommunityCard key={post.id} post={post} dbMenus={dbMenus} onClick={() => setViewPostId(post.id)} lang={lang} />)}
                 {posts.length === 0 && <div className="text-center py-20 text-gray-400">No posts yet. Be the first!</div>}
-                <button onClick={() => setIsWriteModalOpen(true)} className="fixed bottom-24 right-6 z-30 bg-orange-500 text-white p-4 rounded-full shadow-2xl hover:bg-orange-600 transition-colors animate-bounce active:scale-90">✏️</button>
+                <button onClick={() => setIsWriteModalOpen(true)} className="fixed bottom-24 right-6 z-30 bg-orange-500 text-white p-4 rounded-full shadow-2xl shadow-orange-500/30 hover:bg-orange-600 transition-colors animate-bounce active:scale-90">✏️</button>
             </div>
         )}
 
-        {showTopBtn && <button onClick={scrollToTop} className="fixed bottom-6 right-6 z-30 bg-gray-900 text-white p-3.5 rounded-full shadow-2xl hover:bg-orange-500 transition-colors animate-bounce active:scale-90">⬆️</button>}
+        {showTopBtn && <button onClick={scrollToTop} className="fixed bottom-6 right-6 z-30 bg-gray-900 text-white p-3.5 rounded-full shadow-2xl shadow-gray-900/30 hover:bg-orange-500 transition-colors animate-bounce active:scale-90">⬆️</button>}
 
-        {selectedItem && (<DetailModal item={selectedItem.item} selectedPart={selectedItem.part} close={() => setSelectedItem(null)} toggleFavorite={toggleFavorite} isFavorite={favorites.includes(selectedItem.item.id)} refreshData={fetchMenus} />)}
-        {isWriteModalOpen && <CommunityWriteModal close={() => setIsWriteModalOpen(false)} refresh={fetchPosts} dbMenus={dbMenus} />}
-        {viewPostId && <CommunityPostModal postId={viewPostId} close={() => setViewPostId(null)} dbMenus={dbMenus} setSelectedItem={setSelectedItem} />}
+        {selectedItem && (<DetailModal item={selectedItem.item} selectedPart={selectedItem.part} close={() => setSelectedItem(null)} toggleFavorite={toggleFavorite} isFavorite={favorites.includes(selectedItem.item.id)} refreshData={fetchMenus} lang={lang} />)}
+        {isWriteModalOpen && <CommunityWriteModal close={() => setIsWriteModalOpen(false)} refresh={fetchPosts} dbMenus={dbMenus} lang={lang} />}
+        {viewPostId && <CommunityPostModal postId={viewPostId} close={() => setViewPostId(null)} dbMenus={dbMenus} setSelectedItem={setSelectedItem} lang={lang} />}
       </div>
     </div>
   );

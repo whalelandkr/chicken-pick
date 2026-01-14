@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import Papa from "papaparse"; 
+import toast, { Toaster } from "react-hot-toast";
 
-// 환경변수 확인
+// --- [Supabase 설정] ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -13,38 +15,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// --- [핵심 유틸리티] ---
+// --- [핵심 유틸리티 함수] ---
 
-// 1. CSV 파서 (줄바꿈, 따옴표 완벽 처리)
-function parseCSV(text: string) {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentField = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        currentField += '"'; i++;
-      } else { inQuotes = !inQuotes; }
-    } else if (char === ',' && !inQuotes) {
-      currentRow.push(currentField); currentField = "";
-    } else if ((char === '\r' || char === '\n') && !inQuotes) {
-      if (char === '\r' && nextChar === '\n') i++;
-      currentRow.push(currentField); rows.push(currentRow);
-      currentRow = []; currentField = "";
-    } else { currentField += char; }
-  }
-  if (currentField || currentRow.length > 0) {
-    currentRow.push(currentField); rows.push(currentRow);
-  }
-  return rows;
-}
-
-// 2. 한글명 안전 변환기 (해시 생성)
 function normalizeBaseName(raw: string) {
   return raw.trim().replace(/[,\s]+$/g, "").normalize("NFC");
 }
@@ -65,7 +37,6 @@ function makeObjectKeyFromId(id: string) {
   return `${safe}.webp`;
 }
 
-// 3. 이미지 WebP 변환
 async function fileToWebpBlob(file: File): Promise<Blob> {
   if (!file.type.startsWith("image/")) throw new Error("이미지 파일이 아닙니다.");
   try {
@@ -82,13 +53,12 @@ async function fileToWebpBlob(file: File): Promise<Blob> {
   }
 }
 
-// --- 메인 컴포넌트 ---
+// --- [메인 컴포넌트] ---
 export default function AdminPage() {
   const [status, setStatus] = useState("준비 완료");
   const [isLoading, setIsLoading] = useState(false);
   const [failedList, setFailedList] = useState<string[]>([]);
 
-  // 1. 메뉴 이미지 업로드 (무조건 해시 변환 -> 안전)
   const handleImageUpload = async (e: any) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -115,7 +85,6 @@ export default function AdminPage() {
     setIsLoading(false);
   };
 
-  // 2. 브랜드 로고 업로드 (Invalid Key 해결 로직 적용)
   const handleLogoUpload = async (e: any) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -126,31 +95,17 @@ export default function AdminPage() {
     for (const file of files) {
       try {
         const lastDot = file.name.lastIndexOf(".");
-        const name = file.name.substring(0, lastDot); // 확장자 제외 이름
-        const ext = file.name.substring(lastDot).toLowerCase(); // 확장자 (.svg)
-
-        // [핵심] 한글이 포함되었는지 검사
+        const name = file.name.substring(0, lastDot);
+        const ext = file.name.substring(lastDot).toLowerCase();
         const isEnglishOnly = /^[a-zA-Z0-9_.-]+$/.test(name);
         
         let finalName;
-        if (isEnglishOnly) {
-            // 영어면 그대로 사용 (브랜드 ID와 매칭하기 위해)
-            finalName = name; 
-        } else {
-            // 한글/특수문자가 있으면 -> 해시로 변환 (Invalid Key 방지)
-            // *주의: 이렇게 변환되면 메인화면에서 자동 매칭은 안 됩니다. 영어 파일명 권장.
-            finalName = fnv1a32x2Hex(name); 
-        }
+        if (isEnglishOnly) { finalName = name; } 
+        else { finalName = fnv1a32x2Hex(name); }
 
-        const objectKey = `brand_${finalName}${ext}`; // 예: brand_bbq.svg 또는 brand_a1b2.svg
+        const objectKey = `brand_${finalName}${ext}`;
 
-        const { error } = await supabase.storage
-          .from("chicken-images")
-          .upload(objectKey, file, { 
-            upsert: true, 
-            contentType: file.type 
-          });
-
+        const { error } = await supabase.storage.from("chicken-images").upload(objectKey, file, { upsert: true, contentType: file.type });
         if (error) throw error;
         success++;
       } catch (err: any) { 
@@ -162,72 +117,119 @@ export default function AdminPage() {
     setIsLoading(false);
   };
 
-  // 3. CSV 업로드
+  // 3. CSV 데이터 업로드 (디버깅 강화)
   const handleCsvUpload = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
+
     setIsLoading(true); setStatus("CSV 분석 중..."); setFailedList([]);
 
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      const text = evt.target?.result as string;
-      if (!text) return;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => header.trim(), // 헤더 공백 제거
+      complete: async (results) => {
+        try {
+          if (results.errors.length > 0) {
+              console.error("CSV 파싱 경고:", results.errors);
+          }
 
-      try {
-        const allRows = parseCSV(text);
-        const dataRows = allRows.slice(1).filter(row => row.length > 1 && row[0]);
+          const rows = results.data.map((row: any) => {
+            const cleanPrice = row.price ? parseInt(row.price.toString().replace(/,/g, ""), 10) : 0;
+            
+            const getLevel = (val: string) => {
+                if(!val) return 0;
+                const starCount = (val.match(/★/g) || []).length;
+                return starCount > 0 ? starCount : (Number(val.replace(/[^0-9]/g, '')) || 0);
+            };
 
-        const formattedData = dataRows.map((cols) => {
-          const id = cols[0]?.trim();
-          if (!id) return null;
+            const id = row.id?.trim();
+            const objectKey = id ? makeObjectKeyFromId(id) : "";
+            const { data: pub } = supabase.storage.from("chicken-images").getPublicUrl(objectKey);
 
-          const objectKey = makeObjectKeyFromId(id);
-          const { data: pub } = supabase.storage.from("chicken-images").getPublicUrl(objectKey);
+            const tagSource = row['part_type(en)'] || row.part_type;
+            const tags = tagSource ? tagSource.split(",").map((t:string) => t.trim()) : [];
 
-          const getLevel = (val: string) => {
-             if(!val) return 0;
-             const starCount = (val.match(/★/g) || []).length;
-             return starCount > 0 ? starCount : (Number(val.replace(/[^0-9]/g, '')) || 0);
-          };
+            return {
+              id: id,
+              brand: row.brand_id, 
+              
+              // [데이터 매핑]
+              name_kr: row.name_kr,
+              name_en: row.name_en,
+              name_ja: row.name_ja,
+              name_zh: row.name_zh,         
+              name_zhHant: row.name_zhHant, 
 
-          return {
-            id: id,
-            brand: cols[1]?.trim(),
-            name_kr: cols[2]?.trim(),
-            name_en: cols[3]?.trim(),
-            type: "chicken",
-            price: Number(cols[6]?.replace(/,/g, '')) || 0,
-            desc_text: cols[8]?.trim(),
-            allergens: cols[10]?.trim(),
-            image_url: pub.publicUrl,
-            metrics: {
-              spicy: getLevel(cols[12]),
-              crunch: getLevel(cols[13]),
-              sweet: getLevel(cols[14]),
-              garlic: 0
-            },
-            tags: cols[5] ? cols[5].split(',').map(t => t.trim()) : []
-          };
-        }).filter(item => item !== null);
+              desc_text: row.description,
+              description_en: row['description(en)'] || row.description_en, // DB 컬럼: description_en
+              description_ja: row.description_ja || row.desc_jp,
+              description_zh: row.description_zh || row.desc_cn,
+              description_zhHant: row.description_zhHant || row.desc_zhHant,
 
-        const { error } = await supabase.from("menus").upsert(formattedData);
-        if (error) throw error;
+              allergens: row.allergens,
+              allergens_en: row['allergens(en)'] || row.allergens_en, // DB 컬럼: allergens_en
+              allergens_ja: row.allergens_ja,
+              allergens_zh: row.allergens_zh,
+              allergens_zhHant: row.allergens_zhHant,
+              
+              price: cleanPrice,
+              type: "chicken",
+              tags: tags,
+              image_url: pub.publicUrl, 
 
-        setStatus(`✅ 데이터 업로드 성공! (${formattedData.length}개)`);
-      } catch (err: any) {
-        setStatus(`❌ 오류: ${err.message}`);
-        setFailedList([err.message]);
-      } finally {
-        setIsLoading(false);
+              metrics: {
+                spicy: getLevel(row.level_spicy),
+                crunch: getLevel(row.level_crunch),
+                sweet: getLevel(row.level_sweet),
+                garlic: 0
+              }
+            };
+          }).filter((r: any) => r.id);
+
+          if (rows.length === 0) {
+              throw new Error("업로드할 데이터가 없습니다. CSV 헤더(id, brand_id 등)를 확인하세요.");
+          }
+
+          // [디버깅] 실제 전송되는 데이터 확인 (첫번째 줄만)
+          console.log("🔥 전송 데이터 미리보기(첫 1개):", rows[0]);
+          
+          setStatus(`데이터베이스 업로드 중... (${rows.length}개)`);
+
+          // Supabase 업서트
+          const { error } = await supabase.from("menus").upsert(rows, { onConflict: "id" });
+          
+          if (error) {
+              // 에러 상세 내용을 강제로 문자열로 변환하여 출력
+              console.error("🔥 Supabase Error Details:", JSON.stringify(error, null, 2));
+              throw new Error(`DB 오류: ${error.message} (콘솔 확인)`);
+          }
+
+          setStatus(`✅ CSV 업로드 성공! (총 ${rows.length}개 메뉴 업데이트)`);
+          toast.success("데이터베이스 업데이트 완료! 🎉");
+
+        } catch (err: any) {
+          console.error("❌ 최종 에러:", err);
+          // 에러 객체가 비어있을 경우를 대비한 처리
+          const errMsg = err.message || JSON.stringify(err);
+          setStatus(`❌ 업로드 실패: ${errMsg}`);
+          toast.error("업로드 실패: 콘솔 로그를 확인하세요.");
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      error: (err: any) => {
+          setStatus(`❌ CSV 파싱 시스템 오류: ${err.message}`);
+          setIsLoading(false);
       }
-    };
-    reader.readAsText(file);
+    });
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-10">
+      <Toaster />
       <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-lg text-center">
-        <h1 className="text-2xl font-bold mb-6">🍗 데이터 관리자</h1>
+        <h1 className="text-2xl font-bold mb-6">🍗 데이터 관리자 (다국어 지원)</h1>
         
         <div className="space-y-6">
           <div className="p-4 border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl">
@@ -242,7 +244,8 @@ export default function AdminPage() {
           </div>
 
           <div className="p-4 border-2 border-dashed border-orange-300 bg-orange-50 rounded-xl">
-            <p className="font-bold text-orange-600 mb-2">3. CSV 데이터 업로드</p>
+            <p className="font-bold text-orange-600 mb-2">3. CSV 데이터 업로드 (UTF-8)</p>
+            <p className="text-xs text-orange-400 mb-2">* 4개 국어 컬럼이 포함된 CSV 파일을 선택하세요.</p>
             <input type="file" accept=".csv" onChange={handleCsvUpload} />
           </div>
         </div>
